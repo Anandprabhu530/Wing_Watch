@@ -3,9 +3,9 @@ import bird from "../bird.jpg";
 
 export default function Home() {
   return (
-    <div>
+    <div className="font-poppins">
       <div className="h-screen overflow-hidden">
-        <div className="flex">
+        <div className="flex z-10">
           <Image
             src={bird}
             alt="BirdImage"
@@ -13,7 +13,7 @@ export default function Home() {
             height={1000}
             loading="lazy"
           />
-          <div className="h-screen w-full flex items-center text-[150px] font-bold absolute">
+          <div className="h-screen w-full flex items-center text-[180px] font-bold absolute pl-32">
             Enter the world of birds
           </div>
         </div>
