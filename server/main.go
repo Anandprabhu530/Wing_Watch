@@ -1,23 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type images struct {
-    ID     string  `json:"id"`
-    Name  string  `json:"Name"`
-    Watcher string  `json:"Watcher"`
-    Location  string `json:"location"`
+    ID     string
+    Name  string
+    Watcher string
+    Location  string
 }
 
 type posts struct{
-    ID string `json:"id"`
-    Wings string `json:"Wings"`
-    Location string `json:"Location"`
-    Interactions string `json:"Interactions"`
+    ID string
+    Wings int
+    Location string
+    Interactions []string
+    Url string
 }
 
 var Images = []images{
@@ -39,12 +42,14 @@ func getallposts(c *gin.Context){
 }
 
 func postImages(c *gin.Context) {
-    var newPost images
-    if err := c.BindJSON(&newPost); err != nil {
-        return
-    }
-    Images = append(Images, newPost)
-    c.IndentedJSON(http.StatusCreated, newPost)
+    var data struct {
+    Location string
+  }
+  if err := c.BindJSON(&data); err != nil {
+    fmt.Println(err)
+  }
+  Id := uuid.New()
+  fmt.Println("Id:", Id, "Location:", data.Location)
 }
 
 func getPostsbyID(c *gin.Context) {
