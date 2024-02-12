@@ -49,7 +49,7 @@ func postImages(c *gin.Context) {
     fmt.Println(err)
   }
   Id := uuid.New()
-  fmt.Println("Id:", Id, "Location:", data.Location)
+  fmt.Println("Id:", Id, "Location:", data.Location,"Wings:",0)
 }
 
 func getPostsbyID(c *gin.Context) {
