@@ -3,7 +3,7 @@ import sign_in_backgroud from "../../sign_in_backgroud.jpg";
 
 const Sign_In = () => {
   return (
-    <div className="w-full h-screen flex items-center justify-center overflow-hidden">
+    <div className="w-full h-screen flex overflow-hidden">
       <div className="basis-1/2">
         <Image
           src={sign_in_backgroud}
@@ -13,9 +13,8 @@ const Sign_In = () => {
           loading="lazy"
         />
       </div>
-
-      <div className="basis-1/2">
-        <div className="text-4xl w-[70%] pb-20">
+      <div className="basis-1/2 pt-20">
+        <div className="text-4xl w-[70%] pb-20 leading-relaxed">
           Birds evolved from dinosaurs around 150 million years ago, making them
           living dinosaurs!
         </div>
