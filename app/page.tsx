@@ -13,8 +13,19 @@ export default function Home() {
             height={1000}
             loading="lazy"
           />
-          <div className="h-screen w-full flex items-center text-[180px] font-bold absolute pl-32">
-            Enter the world of birds
+          <div className="h-screen w-full from-[#2c2c2c] bg-gradient-to-l  flex items-center text-transparent text-[180px] absolute pl-32 customhometext">
+            Enter the<br></br> birds
+            <span className="text-white absolute right-[220px] top-[210px]">
+              World of
+            </span>
+          </div>
+          <div className="text-3xl w-full justify-center items-center flex gap-8 z-10">
+            <button className="border-2 border-white rounded-xl px-4 py-2">
+              Login
+            </button>
+            <button className="border-2 border-white rounded-xl px-4 py-2 font-semibold bg-white text-black">
+              Sign Up
+            </button>
           </div>
         </div>
       </div>
