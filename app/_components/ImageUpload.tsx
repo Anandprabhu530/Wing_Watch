@@ -17,7 +17,9 @@ const ImageUpload = () => {
           accept="image/*"
           className="pl-32 h-full"
         />
+        {Input ? <img src={Image} alt="Bird_Image"/>:<Image src={bird} alt="Bird_Image" className="w-[200px] "/>}
       </div>
+
     </div>
   );
 };

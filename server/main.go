@@ -10,14 +10,14 @@ import (
 
 type images struct {
     ID     string
-    Name  string
-    Watcher string
-    Location  string
+    Bird_Name  string
+    Author string
+    Location string
 }
 
 type posts struct{
     ID string
-    Wings int
+    Likes int
     Location string
     Interactions []string
     Url string
