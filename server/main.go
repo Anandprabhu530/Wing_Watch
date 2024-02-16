@@ -6,10 +6,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+    
 )
 
 type images struct {
     ID     string
+    ViewURL string
     Bird_Name  string
     Author string
     Location string
@@ -30,6 +32,7 @@ var Images = []images{
 }
 
 func main() {
+    connectionString := "xxxx-xxxxx-xxxxx"
     router := gin.Default()
     router.GET("/posts", getallposts)
     router.GET("/posts/:id", getPostsbyID)
@@ -49,6 +52,11 @@ func postImages(c *gin.Context) {
     fmt.Println(err)
   }
   Id := uuid.New()
+
+  //upload to s3 and get the hosted url.
+  //then save the post url inside variable with type POSTS and 
+  //upload to Postgres
+
   fmt.Println("Id:", Id, "Location:", data.Location,"Wings:",0)
 }
 
