@@ -57,7 +57,11 @@ func postImages(c *gin.Context) {
   //then save the post url inside variable with type POSTS and 
   //upload to Postgres
 
-  fmt.Println("Id:", Id, "Location:", data.Location,"Wings:",0)
+    file, _ := c.FormFile("file")
+	log.Println(file.Filename)
+	c.SaveUploadedFile(file, dst)
+    c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+    fmt.Println("Id:", Id, "Location:", data.Location,"Wings:",0)
 }
 
 func getPostsbyID(c *gin.Context) {
