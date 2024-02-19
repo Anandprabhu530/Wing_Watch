@@ -6,14 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-    
 )
 
 type images struct {
     ID     string
     ViewURL string
     Bird_Name  string
-    Author string
+    Watcher string
     Location string
 }
 
@@ -26,18 +25,20 @@ type posts struct{
 }
 
 var Images = []images{
-    {ID: "1", Name: "Sparrow", Watcher: "John", Location:"Peru"},
-    {ID: "2", Name: "Pink sparrow", Watcher: "Gerry", Location: "Thar"},
-    {ID: "3", Name: "Dove", Watcher: "Sarah", Location: "Jerusalam"},
+    {ID: "1", ViewURL:"test01",Bird_Name: "Sparrow", Watcher: "John", Location:"Peru"},
+    {ID: "2", ViewURL:"test01",Bird_Name: "Pink sparrow", Watcher: "Gerry", Location: "Thar"},
+    {ID: "3", ViewURL:"test01",Bird_Name: "Dove", Watcher: "Sarah", Location: "Jerusalam"},
 }
 
 func main() {
     connectionString := "xxxx-xxxxx-xxxxx"
     router := gin.Default()
+    router.Static("/assets", "./assets")
     router.GET("/posts", getallposts)
     router.GET("/posts/:id", getPostsbyID)
     router.POST("/posts", postImages)
     router.Run("localhost:8080")
+    
 }
 
 func getallposts(c *gin.Context){
@@ -47,17 +48,17 @@ func getallposts(c *gin.Context){
 func postImages(c *gin.Context) {
     var data struct {
     Location string
-  }
-  if err := c.BindJSON(&data); err != nil {
-    fmt.Println(err)
-  }
-  Id := uuid.New()
+    }
+    if err := c.BindJSON(&data); err != nil {
+        fmt.Println(err)
+    }
+    Id := uuid.New()
 
-  //upload to s3 and get the hosted url.
-  //then save the post url inside variable with type POSTS and 
-  //upload to Postgres
+    //upload to Firebase and get the hosted url.
+    //then save the post url inside variable with type POSTS and 
+    //upload to Postgres
 
-    file, _ := c.FormFile("file")
+    file, _ := c.FormFile("image")
 	log.Println(file.Filename)
 	c.SaveUploadedFile(file, dst)
     c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
