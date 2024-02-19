@@ -18,14 +18,14 @@ const Post = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     Validatedata(data)
-    // const res = await fetch("http://localhost:8080/postImages",{
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(data),
-    // });
-    console.log(data)
+    const res = await fetch("http://localhost:8080/postImages",{
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    console.log(res)
   }
 
   const handleChange = (event) =>{
