@@ -7,10 +7,22 @@ import bird from "../../../bird.jpg";
 
 const Post = () => {
   const [Input, setInput] = useState(null);
+  const [data,setData] = useState(null)
 
-  const handleSubmit = (event) =>{
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log("Clicked")
+    // const res = await fetch("http://localhost:8080/postImages",{
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(data),
+    // });
+    console.log(data)
+  }
+
+  const handleChange = (event) =>{
+    setData((prev)=>({...prev,[event.target.name]:event.target.value}))
   }
 
   return (
@@ -18,15 +30,15 @@ const Post = () => {
       <form className="flex flex-col p-8 w-full border-2 border-red-400" onSubmit={handleSubmit}>
         <div>
           <div className="text-2xl pb-4 font-medium">Name of the Bird:</div>
-          <input className="border border-white bg-transparent rounded-md w-full outline-none mb-6 text-xl p-2" />
+          <input name="BirdName" onChange={handleChange} className="border border-white bg-transparent rounded-md w-full outline-none mb-6 text-xl p-2" />
         </div>
         <div>
           <div className="text-2xl pb-4 font-medium">Location:</div>
-          <input className="border border-white bg-transparent rounded-md w-full outline-none mb-6 text-xl p-2" />
+          <input name="Location" onChange={handleChange} className="border border-white bg-transparent rounded-md w-full outline-none mb-6 text-xl p-2" />
         </div>
         <div>
           <div className="text-2xl pb-4 font-medium">Description:</div>
-          <textarea className="border border-white h-[225px] resize-none bg-transparent rounded-md w-full outline-none mb-6 text-xl p-2" />
+          <textarea name="Description" onChange={handleChange} className="border border-white h-[225px] resize-none bg-transparent rounded-md w-full outline-none mb-6 text-xl p-2" />
         </div>
         <div>
           <div className="text-2xl pb-4 font-medium">Image:</div>
