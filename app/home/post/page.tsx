@@ -5,12 +5,19 @@ import ImageUpload from "@/app/_components/ImageUpload";
 import Image from "next/image";
 import bird from "../../../bird.jpg";
 
+const Validatedata = (data) =>{
+  if(data.BirdName==="" || data.Location===""||data.Description===""){
+    console.log("Null value dont submit")
+  }
+}
+
 const Post = () => {
   const [Input, setInput] = useState(null);
   const [data,setData] = useState(null)
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    Validatedata(data)
     // const res = await fetch("http://localhost:8080/postImages",{
     //   method: "POST",
     //   headers: {
