@@ -26,8 +26,8 @@ type posts struct{
 
 var Images = []images{
     {ID: "1", ViewURL:"test01",Bird_Name: "Sparrow", Watcher: "John", Location:"Peru"},
-    {ID: "2", ViewURL:"test01",Bird_Name: "Pink sparrow", Watcher: "Gerry", Location: "Thar"},
-    {ID: "3", ViewURL:"test01",Bird_Name: "Dove", Watcher: "Sarah", Location: "Jerusalam"},
+    {ID: "2", ViewURL:"test02",Bird_Name: "Pink sparrow", Watcher: "Gerry", Location: "Thar"},
+    {ID: "3", ViewURL:"test03",Bird_Name: "Dove", Watcher: "Sarah", Location: "Jerusalam"},
 }
 
 func main() {
@@ -54,8 +54,8 @@ func postImages(c *gin.Context) {
     }
     Id := uuid.New()
 
-    //upload to Firebase and get the hosted url.
-    //then save the post url inside variable with type POSTS and 
+    //Save to local disk at assets folder
+    //save the post url inside variable with type POSTS and 
     //upload to Postgres
 
     file, _ := c.FormFile("image")

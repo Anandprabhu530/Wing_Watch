@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react';
-import ImageUpload from "@/app/_components/ImageUpload";
 import Image from "next/image";
 import bird from "../../../bird.jpg";
 
@@ -12,7 +11,7 @@ const Validatedata = (data) =>{
 }
 
 const Post = () => {
-  const [Input, setInput] = useState(null);
+  const [inputimage, setInputimage] = useState(null);
   const [data,setData] = useState(null)
 
   const handleSubmit = async (event) => {
@@ -57,7 +56,7 @@ const Post = () => {
               accept="image/*"
               className="pl-32 h-full"
             />
-            {Input ? <img src={Image} alt="Bird_Image"/>:<Image src={bird} alt="Bird_Image" className="w-[200px] "/>}
+            {inputimage ? <img src={Image} alt="Bird_Image"/>:<Image src={bird} alt="Bird_Image" className="w-[200px] "/>}
           </div>
         </div>
         <div className="pt-4 flex w-full justify-center items-center "> 
