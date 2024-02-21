@@ -1,20 +1,27 @@
 'use client'
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Image from "next/image";
 import bird from "../../../bird.jpg";
-
-const Validatedata = (data) =>{
+type Data = {
+  BirdName : string | null
+  Location : string |null
+  Description : string | null
+}
+const Validatedata = (data:Data) =>{
   if(data.BirdName==="" || data.Location===""||data.Description===""){
     console.log("Null value dont submit")
   }
 }
 
 const Post = () => {
-  const [inputimage, setInputimage] = useState(null);
-  const [data,setData] = useState(null)
+  const [inputimage, setInputimage] = useState(null)
+  const [data,setData] = useState({BirdName :"",
+  Location : "",
+  Description : ""
+  })
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event:React.FormEvent) => {
     event.preventDefault();
     Validatedata(data)
     const res = await fetch("http://localhost:8080/postImages",{
@@ -27,7 +34,7 @@ const Post = () => {
     console.log(res)
   }
 
-  const handleChange = (event) =>{
+  const handleChange = (event:React.ChangeEvent<HTMLInputElement>) =>{
     setData((prev)=>({...prev,[event.target.name]:event.target.value}))
   }
 

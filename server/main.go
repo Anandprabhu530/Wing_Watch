@@ -58,7 +58,11 @@ func postImages(c *gin.Context) {
     //save the post url inside variable with type POSTS and 
     //upload to Postgres
 
-    file, _ := c.FormFile("image")
+    file, err := c.FormFile("image")
+    if(err!=nil){
+        fmt.Println("File not Uploaded")
+        return
+    }
 	log.Println(file.Filename)
 	c.SaveUploadedFile(file, dst)
     c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
