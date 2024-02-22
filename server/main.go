@@ -62,10 +62,17 @@ func getallposts(c *gin.Context){
     c.IndentedJSON(http.StatusOK, Images)
 }
 
+func authorize(c *gin.Context){
+    //var username = c.username - temp usage
+    //var password = c.password - temp usage
+    //if(username exists in database and match password) return true else retunr false;
+}
+
 func postImages(c *gin.Context) {
     var data struct {
-    Location string
+        Location string
     }
+
     if err := c.BindJSON(&data); err != nil {
         fmt.Println(err)
     }
@@ -78,8 +85,7 @@ func postImages(c *gin.Context) {
     file, err := c.FormFile("image")
     if(err!=nil){
         fmt.Println("File not Uploaded")
-        return
-    }
+        return    }
 	log.Println(file.Filename)
 	c.SaveUploadedFile(file, dst)
     c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
