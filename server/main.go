@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+    _ "github.com/lib/pq"
 )
 
 type images struct {
@@ -14,6 +15,17 @@ type images struct {
     Bird_Name  string
     Watcher string
     Location string
+}
+
+type userreg struct{
+    ID string
+    UserName string
+    Password string
+}
+
+type user struct{
+    UserName string
+    posts
 }
 
 type posts struct{
@@ -32,12 +44,17 @@ var Images = []images{
 
 func main() {
     connectionString := "xxxx-xxxxx-xxxxx"
+    db,err := sql.Open("postgres",connectionString);
+    if(err!=nil){
+        fmt.Println("Database connection error")
+    }
     router := gin.Default()
     router.Static("/assets", "./assets")
     router.GET("/posts", getallposts)
     router.GET("/posts/:id", getPostsbyID)
     router.POST("/posts", postImages)
     router.Run("localhost:8080")
+    defer db.close();
     
 }
 
