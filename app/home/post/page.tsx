@@ -3,11 +3,13 @@
 import React, { useState } from 'react';
 import Image from "next/image";
 import bird from "../../../bird.jpg";
+
 type Data = {
   BirdName : string | null
   Location : string |null
   Description : string | null
 }
+
 const Validatedata = (data:Data) =>{
   if(data.BirdName==="" || data.Location===""||data.Description===""){
     console.log("Null value dont submit")

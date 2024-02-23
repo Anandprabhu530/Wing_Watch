@@ -53,9 +53,17 @@ func main() {
     router.GET("/posts", getallposts)
     router.GET("/posts/:id", getPostsbyID)
     router.POST("/posts", postImages)
+    router.POST("/login", authorize)
+    router.POST("/register", register)
     router.Run("localhost:8080")
     defer db.close();
     
+}
+
+func register(c *gin.Context){
+    //var username = c.username - temp usage
+    //var password = c.password - temp usage
+    //register with username and password
 }
 
 func getallposts(c *gin.Context){
