@@ -60,20 +60,44 @@ func main() {
     
 }
 
+
+func createTable(c *gin.Context){
+    //if table does not exists create table and the proceed with the rest.
+    var query = "CREATE TABEL IF NOT EXISTS USERS"
+}
+
+
 func register(c *gin.Context){
     //var username = c.username - temp usage
     //var password = c.password - temp usage
     //register with username and password
-}
-
-func getallposts(c *gin.Context){
-    c.IndentedJSON(http.StatusOK, Images)
+    var check,error := "SELECT USERNAME FROM USERS WHERE USERNAME=Temp"
+    if(error!=nil){
+        var query = "INSERT INTO USERS USERNAME, PASSWORD"
+        return true
+    }else{
+        fmt.Println("User Already Exists. Try logging in")
+        return false
+    }
 }
 
 func authorize(c *gin.Context){
     //var username = c.username - temp usage
     //var password = c.password - temp usage
     //if(username exists in database and match password) return true else retunr false;
+    var pass,error := "SELECT PASSWORD WHERE USERNAME=temp"
+    if(error!=nil){
+        fmt.Println("User Does not exits.Try creating New account")
+    }
+    if(query == password){
+        return true
+    }
+    return false
+}
+
+
+func getallposts(c *gin.Context){
+    c.IndentedJSON(http.StatusOK, Images)
 }
 
 func postImages(c *gin.Context) {
@@ -94,7 +118,7 @@ func postImages(c *gin.Context) {
     if(err!=nil){
         fmt.Println("File not Uploaded")
         return    }
-	log.Println(file.Filename)
+	fmt.Println(file.Filename)
 	c.SaveUploadedFile(file, dst)
     c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
     fmt.Println("Id:", Id, "Location:", data.Location,"Wings:",0)
