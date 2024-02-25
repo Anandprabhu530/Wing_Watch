@@ -61,19 +61,31 @@ func main() {
 }
 
 
-func createTable(c *gin.Context){
+func createTable(db *sql.DB){
     //if table does not exists create table and the proceed with the rest.
-    var query = "CREATE TABEL IF NOT EXISTS USERS"
+    query := "CREATE TABEL IF NOT EXISTS USERS(
+        ID SERIAL PRIMARY KEY,
+        USERNAME VARCHAR(100) NOT NULL,
+        PASSWORD VARCHAR(100) NOT NULL
+    )"
+    _,err := db.Exec(query)
+    if(err!=nil){
+        fmt.Println("Something went wrong");
+    }
 }
 
 
-func register(c *gin.Context){
+func register(db *sql.DB,c *gin.Context){
     //var username = c.username - temp usage
     //var password = c.password - temp usage
     //register with username and password
     var check,error := "SELECT USERNAME FROM USERS WHERE USERNAME=Temp"
     if(error!=nil){
-        var query = "INSERT INTO USERS USERNAME, PASSWORD"
+        query := "INSERT INTO USERS(USERNAME, PASSWORD) VALUES($1, $2)"
+        err:= db.QueryRow(query,username,password)
+        if(err!=nil){
+            fmt.Println("Cannot Insert")
+        }
         return true
     }else{
         fmt.Println("User Already Exists. Try logging in")
