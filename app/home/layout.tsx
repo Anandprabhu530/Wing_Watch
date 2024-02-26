@@ -13,7 +13,7 @@ const Homelayout = ({ children }) => {
             <Link href="/home/post">New Post</Link>
           </div>
         </div>
-        <div className="basis-2/3 border border-white overflow-auto">
+        <div className="basis-2/3 overflow-auto">
           <div>{children}</div>
         </div>
       </div>

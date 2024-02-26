@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"net/http"
-
+    "os"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
     _ "github.com/lib/pq"
+    "github.com/joho/godotenv"
 )
 
 type images struct {
@@ -52,7 +53,7 @@ func main() {
     router.Static("/assets", "./assets")
     router.GET("/posts", getallposts)
     router.GET("/posts/:id", getPostsbyID)
-    router.POST("/posts", postImages)
+    router.POST("/posts", addImages)
     router.POST("/login", authorize)
     router.POST("/register", register)
     router.Run("localhost:8080")
@@ -81,7 +82,7 @@ func register(db *sql.DB,c *gin.Context){
     //register with username and password
     var check,error := "SELECT USERNAME FROM USERS WHERE USERNAME=Temp"
     if(error!=nil){
-        query := "INSERT INTO USERS(USERNAME, PASSWORD) VALUES($1, $2)"
+        query := "INSERT INTO USERS(USERNAME, PASSWORD) VALUES(?, ?)"
         err:= db.QueryRow(query,username,password)
         if(err!=nil){
             fmt.Println("Cannot Insert")
@@ -112,11 +113,10 @@ func getallposts(c *gin.Context){
     c.IndentedJSON(http.StatusOK, Images)
 }
 
-func postImages(c *gin.Context) {
+func addImages(c *gin.Context) {
     var data struct {
         Location string
     }
-
     if err := c.BindJSON(&data); err != nil {
         fmt.Println(err)
     }
@@ -129,7 +129,8 @@ func postImages(c *gin.Context) {
     file, err := c.FormFile("image")
     if(err!=nil){
         fmt.Println("File not Uploaded")
-        return    }
+        return    
+    }
 	fmt.Println(file.Filename)
 	c.SaveUploadedFile(file, dst)
     c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
