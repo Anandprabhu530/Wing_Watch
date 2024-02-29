@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 const Homelayout = ({ children }) => {
   return (
-    <div className="flex w-full h-screen">
+    <div className="flex w-full h-screen scrollbar overflow-y-auto">
       <div className='basis-2/6'></div>
       <div className='basis-3/6'>
         <div className='flex w-full'>
@@ -14,7 +14,7 @@ const Homelayout = ({ children }) => {
               <Link href="/home/post">New Post</Link>
             </div>
           </div>
-          <div className="basis-2/3 overflow-y-auto">
+          <div className="basis-2/3  ">
             <div>{children}</div>
           </div>
         </div>

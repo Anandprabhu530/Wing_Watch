@@ -14,7 +14,7 @@ const Homelayout = ({ children }) => {
               <Link href="/home/post">New Post</Link>
             </div>
           </div>
-          <div className="basis-2/3 overflow-y-auto">
+          <div className="basis-2/3 overflow-y-auto ">
             <div>{children}</div>
           </div>
         </div>
