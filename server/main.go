@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-    "os"
+    "net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"fmt"
+    "os"
+    // "database/sql"
     _ "github.com/lib/pq"
     "github.com/joho/godotenv"
 )
@@ -44,11 +45,31 @@ var Images = []images{
 }
 
 func main() {
-    connectionString := "xxxx-xxxxx-xxxxx"
+    ctx := context.Background()
+    err := godotenv.Load()
+    connectionString := os.Getenv("connStr")
+    fmt.Println(connectionString)
     db,err := sql.Open("postgres",connectionString);
     if(err!=nil){
         fmt.Println("Database connection error")
     }
+    statement := `
+		CREATE TABLE users (
+			id SERIAL PRIMARY KEY,
+			username VARCHAR(50) NOT NULL UNIQUE,
+			email VARCHAR(100) NOT NULL UNIQUE,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		);
+	`
+
+	// Create the table
+	err = createTable(ctx, db, statement)
+	if err != nil {
+		fmt.Println("Error creating table:", err)
+		return
+	}
+
+	fmt.Println("Table created successfully!")
     router := gin.Default()
     router.Static("/assets", "./assets")
     router.GET("/posts", getallposts)
@@ -62,25 +83,19 @@ func main() {
 }
 
 
-func createTable(db *sql.DB){
-    //if table does not exists create table and the proceed with the rest.
-    query := "CREATE TABEL IF NOT EXISTS USERS(
-        ID SERIAL PRIMARY KEY,
-        USERNAME VARCHAR(100) NOT NULL,
-        PASSWORD VARCHAR(100) NOT NULL
-    )"
-    _,err := db.Exec(query)
-    if(err!=nil){
-        fmt.Println("Something went wrong");
-    }
+func createTable(ctx context.Context, db *sql.DB, statement string) error {
+	_, err := db.ExecContext(ctx, statement)
+	if err != nil {
+		return fmt.Errorf("failed to create table: %w", err)
+	}
+	return nil
 }
-
 
 func register(db *sql.DB,c *gin.Context){
     //var username = c.username - temp usage
     //var password = c.password - temp usage
     //register with username and password
-    var check,error := "SELECT USERNAME FROM USERS WHERE USERNAME=Temp"
+    var check = "SELECT USERNAME FROM USERS WHERE USERNAME=Temp"
     if(error!=nil){
         query := "INSERT INTO USERS(USERNAME, PASSWORD) VALUES(?, ?)"
         err:= db.QueryRow(query,username,password)
@@ -98,7 +113,7 @@ func authorize(c *gin.Context){
     //var username = c.username - temp usage
     //var password = c.password - temp usage
     //if(username exists in database and match password) return true else retunr false;
-    var pass,error := "SELECT PASSWORD WHERE USERNAME=temp"
+    var pass = "SELECT PASSWORD WHERE USERNAME=temp"
     if(error!=nil){
         fmt.Println("User Does not exits.Try creating New account")
     }
