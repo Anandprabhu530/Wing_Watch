@@ -125,7 +125,11 @@ func authorize(c *gin.Context){
 
 
 func getallposts(c *gin.Context){
-    c.IndentedJSON(http.StatusOK, Images)
+    query,err := db.QueryRow("SELECT * FROM USERS WHERE USERNAME=temp");
+    if(err!=nil){
+        fmt.Println(err);
+    }
+    return query;
 }
 
 func addImages(c *gin.Context) {
