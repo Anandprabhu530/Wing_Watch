@@ -42,7 +42,7 @@ const Post = () => {
 
   return (
     <div>
-      <form className="flex flex-col p-8 w-full border-2 border-red-400" onSubmit={handleSubmit}>
+      <form className="flex flex-col p-8 w-full" onSubmit={handleSubmit}>
         <div>
           <div className="text-2xl pb-4 font-medium">Name of the Bird:</div>
           <input name="BirdName" onChange={handleChange} className="border border-white bg-transparent rounded-md w-full outline-none mb-6 text-xl p-2" />

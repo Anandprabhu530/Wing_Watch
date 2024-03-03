@@ -1,5 +1,6 @@
 import Image from "next/image";
 import bird from "../bird.jpg";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -20,12 +21,12 @@ export default function Home() {
             </span>
           </div>
           <div className="text-3xl w-full justify-center items-center flex gap-8 z-10">
-            <button className="border-2 border-white rounded-xl px-4 py-2">
+            <Link href="/sign_in" className="border-2 border-white rounded-xl px-4 py-2">
               Login
-            </button>
-            <button className="border-2 border-white rounded-xl px-4 py-2 font-semibold bg-white text-black">
+            </Link>
+            <Link href="/sign_up" className="border-2 border-white rounded-xl px-4 py-2-semibold bg-white text-black">
               Sign Up
-            </button>
+            </Link>
           </div>
         </div>
       </div>
