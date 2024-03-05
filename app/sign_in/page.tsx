@@ -1,10 +1,33 @@
+'use client'
+
 import Image from "next/image";
 import sign_in_backgroud from "../../sign_in_backgroud.jpg";
 import Link from "next/link";
-
+import { useState } from "react";
+import { redirect } from 'next/navigation'
 const Sign_In = () => {
+  const [formData, setFormData] = useState({})
+  
+  const handlesubmit = async(event) =>{
+    event.preventDefault()
+    const res = await fetch("https://localhost:8080/login",{
+      method: "POST",
+      body: JSON.stringify({ data: formData })
+    })
+
+    if(res.ok){
+      redirect('/home')
+    }
+  }
+
+  const handleChange = (event) =>{
+    setFormData((prev)=>({
+      ...prev,
+      [event?.target.name]:event?.target.value
+    }))
+  }
   return (
-    <div className="w-full h-screen flex overflow-hidden">
+    <div className="w-full h-screen flex ">
       <div className="basis-1/2">
         <Image
           src={sign_in_backgroud}
@@ -29,6 +52,8 @@ const Sign_In = () => {
               <input
                 className="w-full bg-transparent border-b-2 text-white text-xl outline-none pb-2"
                 type="email"
+                onChange={handleChange}
+                name="email"
               />
             </div>
             <div>
@@ -36,10 +61,12 @@ const Sign_In = () => {
               <input
                 className="w-full bg-transparent border-b-2 text-white text-xl outline-none pb-2"
                 type="password"
+                onChange={handleChange}
+                name="password"
               />
             </div>
             <div className=" w-full flex justify-center pt-6">
-                <button className="rounded-xl bg-[#0000FF] text-white text-xl px-8 py-2 ">
+                <button className="rounded-xl bg-[#0000FF] text-white text-xl px-8 py-2" onClick={handlesubmit}>
                 Login
               </button>
             </div>

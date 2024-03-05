@@ -8,11 +8,12 @@ import(
     // "log"
 
 	"gorm.io/gorm"
-	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/driver/postgres"
     "github.com/joho/godotenv"
     "github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/gin-contrib/cors"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type User struct {
@@ -42,6 +43,8 @@ func init(){
 
 func main(){
     r := gin.Default()
+	r.Use(cors.Default())
+ 	r.Run()
 	r.POST("/register", register)
 	r.POST("/login",login)
 	r.Run()
@@ -85,7 +88,6 @@ func login(c *gin.Context){
 		"token":tokenString,
 	})
 }
-
 
 func register(c *gin.Context){
 	var body struct {
