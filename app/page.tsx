@@ -24,7 +24,7 @@ export default function Home() {
             <Link href="/sign_in" className="border-2 border-white rounded-xl px-4 py-2">
               Login
             </Link>
-            <Link href="/sign_up" className="border-2 border-white rounded-xl px-4 py-2-semibold bg-white text-black">
+            <Link href="/sign_up" className="border-2 border-white rounded-xl px-4 py-2 font-semibold bg-white text-black">
               Sign Up
             </Link>
           </div>
