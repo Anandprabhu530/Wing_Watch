@@ -47,6 +47,7 @@ func main(){
  	r.Run()
 	r.POST("/register", register)
 	r.POST("/login",login)
+	r.GET("/validate",authentication_mw, validate)
 	r.Run()
 }
 
@@ -84,9 +85,9 @@ func login(c *gin.Context){
 		return;
 	}
 
-	c.setSamesite(http.SameSiteLaxMode)
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("authorization",tokenString,3600*24*30,"","",false,true);
-	
+
 	c.JSON(http.StatusOK,gin.H{
 		"token":tokenString,
 	})
@@ -117,4 +118,44 @@ func register(c *gin.Context){
 	}
 	fmt.Println("Succesfully Inserted")
 	c.JSON(http.StatusOK, gin.H{})
+}
+
+func validate(c *gin.Context){
+	c.JSON(http.StatusOK,gin.H{
+		"message" : "Hello World",
+	})
+}
+
+func authentication_mw(c *gin.Context){
+
+	tokenString,err := c.Cookie()
+	fmt.Println("Hello World")
+	if err!=nil{
+		fmt.Println"It is not good outside"
+		return
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+	
+		return os.Getenv("hashcode"), nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		if float64(time.Now().Unix()) > claims["exp"].(float64){
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+		
+		fmt.Println(claims["sub"], claims["exp"])
+	} else {
+		fmt.Println(err)
+	}
+	
+	
+	c.Next()
 }
