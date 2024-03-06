@@ -8,6 +8,7 @@ import(
     // "log"
 
 	"gorm.io/gorm"
+	"github.com/google/uuid"
 	"gorm.io/driver/postgres"
     "github.com/joho/godotenv"
     "github.com/gin-gonic/gin"
@@ -18,6 +19,7 @@ import(
 
 type User struct {
 	gorm.Model
+	ID string `gorm:"unique"`
 	Username string `gorm:"unique"`
 	Password string
 }
@@ -53,6 +55,7 @@ func main(){
 
 func login(c *gin.Context){
 	var body struct {
+		ID string
 		Username string
 		Password string
 	}
@@ -63,7 +66,7 @@ func login(c *gin.Context){
 	
 	var user User
 	DB.First(&user, "Username = ?", body.Username)
-	if user.ID == 0{
+	if user.ID == ""{
 		fmt.Println("Username or password is incorrect");
 		return;
 	}
@@ -89,12 +92,13 @@ func login(c *gin.Context){
 	c.SetCookie("authorization",tokenString,3600*24*30,"","",false,true);
 
 	c.JSON(http.StatusOK,gin.H{
-		"token":tokenString,
+		"data":userId,
 	})
 }
 
 func register(c *gin.Context){
 	var body struct {
+		ID string
 		Username string
 		Password string
 	}
@@ -108,8 +112,8 @@ func register(c *gin.Context){
 		fmt.Println("Cannot generate Hash Value");
 		return
 	}
-
-	user := User{Username:body.Username,Password:string(hash)}
+	userId := uuid.New().String()
+	user := User{ID:userId,Username:body.Username,Password:string(hash)}
 	result := DB.Create(&user)
 
 	if result.Error != nil{
@@ -122,16 +126,14 @@ func register(c *gin.Context){
 
 func validate(c *gin.Context){
 	c.JSON(http.StatusOK,gin.H{
-		"message" : "Hello World",
+		"data" : userId,
 	})
 }
 
 func authentication_mw(c *gin.Context){
-
-	tokenString,err := c.Cookie()
-	fmt.Println("Hello World")
+	tokenString,err := c.Cookie("authorization")
 	if err!=nil{
-		fmt.Println"It is not good outside"
+		fmt.Println("It is not good outside")
 		return
 	}
 
@@ -143,7 +145,7 @@ func authentication_mw(c *gin.Context){
 		return os.Getenv("hashcode"), nil
 	})
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
@@ -151,19 +153,17 @@ func authentication_mw(c *gin.Context){
 			c.AbortWithStatus(http.StatusUnauthorized)
 		}
 		var user User
-		DB.First(&user, claims["exp"])
+		DB.First(&user, claims["sub"])
 
-		if user.ID==0{
+		if user.ID==""{
 			fmt.Println("User does not exists. Try creating new account");
 			return
 		}
 		fmt.Println(claims["sub"], claims["Sub"])
 
+		c.Set("user",user)
 	} else {
 		fmt.Println(err)
 	}
-	
-	c.Set("user",user)
-	
 	c.Next()
 }
