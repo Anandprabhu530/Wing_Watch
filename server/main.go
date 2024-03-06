@@ -150,12 +150,20 @@ func authentication_mw(c *gin.Context){
 		if float64(time.Now().Unix()) > claims["exp"].(float64){
 			c.AbortWithStatus(http.StatusUnauthorized)
 		}
-		
-		fmt.Println(claims["sub"], claims["exp"])
+		var user User
+		DB.First(&user, claims["exp"])
+
+		if user.ID==0{
+			fmt.Println("User does not exists. Try creating new account");
+			return
+		}
+		fmt.Println(claims["sub"], claims["Sub"])
+
 	} else {
 		fmt.Println(err)
 	}
 	
+	c.Set("user",user)
 	
 	c.Next()
 }
