@@ -5,7 +5,6 @@ import(
     "fmt"
 	"time"
 	"net/http"
-    // "log"
 
 	"gorm.io/gorm"
 	"github.com/google/uuid"
@@ -22,6 +21,13 @@ type User struct {
 	ID string `gorm:"unique"`
 	Username string `gorm:"unique"`
 	Password string
+	Posts []Post `gorm:"many2many:user_languages;"`
+}
+
+type Post struct{
+	gorm.Model
+	url string
+	UserID  uint `gorm:"ID"`
 }
 
 var DB *gorm.DB
@@ -50,8 +56,11 @@ func main(){
 	r.POST("/register", register)
 	r.POST("/login",login)
 	r.GET("/validate",authentication_mw, validate)
+	r.POST("/post",post)
 	r.Run()
 }
+
+var main_user_id;
 
 func login(c *gin.Context){
 	var body struct {
@@ -90,7 +99,7 @@ func login(c *gin.Context){
 
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("authorization",tokenString,3600*24*30,"","",false,true);
-
+	main_user_id = userId
 	c.JSON(http.StatusOK,gin.H{
 		"data":userId,
 	})
@@ -121,6 +130,7 @@ func register(c *gin.Context){
 		return
 	}
 	fmt.Println("Succesfully Inserted")
+	main_user_id = userId
 	c.JSON(http.StatusOK, gin.H{})
 }
 
@@ -128,6 +138,20 @@ func validate(c *gin.Context){
 	c.JSON(http.StatusOK,gin.H{
 		"data" : userId,
 	})
+}
+
+
+func post(c *gin.Context){
+	fmt.Println("Inside post new post"
+	url := uuid.New().String()
+	newpost = Post{url:url,userId:main_user_id}
+	result := DB.Create(&newpost)
+
+	if result.error != nil{
+		fmt.Println("Cannot insert the post")
+		return
+	}
+	c.JSON(http.StatusOK,gin.H{})
 }
 
 func authentication_mw(c *gin.Context){
