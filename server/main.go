@@ -53,10 +53,16 @@ func main(){
     r := gin.Default()
 	r.Use(cors.Default())
  	r.Run()
+	r.Static("/assets", "./assets")
 	r.POST("/register", register)
 	r.POST("/login",login)
 	r.GET("/validate",authentication_mw, validate)
-	r.POST("/post",post)
+	r.POST("/post", func(c *gin.Context) {
+		file, _ := c.FormFile("file")
+		log.Println(file.Filename)
+		c.SaveUploadedFile(file, dst)
+		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+		post(file.Filename)
 	r.Run()
 }
 
@@ -153,6 +159,7 @@ func post(c *gin.Context){
 	}
 	c.JSON(http.StatusOK,gin.H{})
 }
+
 
 func authentication_mw(c *gin.Context){
 	tokenString,err := c.Cookie("authorization")
