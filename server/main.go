@@ -66,8 +66,11 @@ func main(){
 	r.Run()
 }
 
+//This is set to userID when login or register.
+//used for reference for other functions
 var main_user_id;
 
+//login the user
 func login(c *gin.Context){
 	var body struct {
 		ID string
@@ -111,6 +114,7 @@ func login(c *gin.Context){
 	})
 }
 
+//register new user
 func register(c *gin.Context){
 	var body struct {
 		ID string
@@ -140,13 +144,21 @@ func register(c *gin.Context){
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-func validate(c *gin.Context){
-	c.JSON(http.StatusOK,gin.H{
-		"data" : userId,
+//get the posts for his id
+//posts done by him - profile page
+func fetch_profile_data( c *gin.Context, db *gorm.DB){
+	user := User{ID:main_user_id}
+	result := db.First(&user)
+	if result.error != nil{
+		fmt.Println("Cannot fetch from the database")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"data":result
 	})
 }
 
-
+//function to post images
 func post(c *gin.Context){
 	fmt.Println("Inside post new post"
 	url := uuid.New().String()
@@ -160,7 +172,7 @@ func post(c *gin.Context){
 	c.JSON(http.StatusOK,gin.H{})
 }
 
-
+//middleware used for authentication
 func authentication_mw(c *gin.Context){
 	tokenString,err := c.Cookie("authorization")
 	if err!=nil{
