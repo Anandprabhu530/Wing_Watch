@@ -147,9 +147,18 @@ func register(c *gin.Context){
 //get the posts for his id
 //posts done by him - profile page
 func fetch_profile_data( c *gin.Context, db *gorm.DB){
-	user := User{ID:main_user_id}
-	result := db.First(&user)
-	if result.error != nil{
+	var body struct {
+		ID string
+		Username string
+		Password string
+	}
+	if c.Bind(&body) != nil{
+		fmt.Println("Cannot bind the data");
+		return
+	}
+	var user User
+	result := db.First(&user,main_user_id)
+	if result.Error != nil{
 		fmt.Println("Cannot fetch from the database")
 		return
 	}
@@ -158,14 +167,45 @@ func fetch_profile_data( c *gin.Context, db *gorm.DB){
 	})
 }
 
+//retrieve all posts to show in homepage
+func fetch_all_post(c *gin.Context){
+	var body struct {
+		ID string
+		Username string
+		Password string
+	}
+	if c.Bind(&body) != nil{
+		fmt.Println("Cannot bind the data");
+		return
+	}
+	var user User
+	result := DB.First(&user)
+	if result.Error != nil{
+		fmt.Println("No posts found to send")
+		c.AbortWithStatus(400)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"data":result,
+	})
+}
+
 //function to post images
 func post(c *gin.Context){
+	var body struct {
+		ID string
+		Username string
+		Password string
+	}
+	if c.Bind(&body) != nil{
+		fmt.Println("Cannot bind the data");
+		return
+	}
 	fmt.Println("Inside post new post"
 	url := uuid.New().String()
 	newpost = Post{url:url,userId:main_user_id}
 	result := DB.Create(&newpost)
 
-	if result.error != nil{
+	if result.Error != nil{
 		fmt.Println("Cannot insert the post")
 		return
 	}
