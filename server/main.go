@@ -1,142 +1,175 @@
-package main 
+package main
 
-import(
-	"os"
-    "fmt"
-	"time"
+import (
+	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"time"
 
-	"gorm.io/gorm"
-	"github.com/google/uuid"
-	"gorm.io/driver/postgres"
-    "github.com/joho/godotenv"
-    "github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type User struct {
 	gorm.Model
-	ID string `gorm:"unique"`
+	ID       string `gorm:"unique"`
 	Username string `gorm:"unique"`
 	Password string
-	Posts []Post `gorm:"many2many:user_languages;"`
+	Posts    []Post `gorm:"many2many:user_languages;"`
 }
 
-type Post struct{
+type Post struct {
 	gorm.Model
-	url string
-	UserID  uint `gorm:"ID"`
+	url    string
+	UserID string `gorm:"ID"`
 }
 
 var DB *gorm.DB
 
-func init(){
-    err := godotenv.Load()
+func init() {
+	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error loading .env file")
 	}
 	var dberr error
 
 	dsn := os.Getenv("connStr")
-	
+
 	DB, dberr = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if(dberr!=nil){
+	if dberr != nil {
 		fmt.Println(dberr)
 	}
-	
+
 	DB.AutoMigrate(&User{})
 }
 
-func main(){
-    r := gin.Default()
+func main() {
+	r := gin.Default()
 	r.Use(cors.Default())
- 	r.Run()
+	r.Run()
 	r.Static("/assets", "./assets")
+	r.GET("/", func(c *gin.Context) {
+		fmt.Println("Hello World")
+		c.JSON(http.StatusOK, gin.H{
+			"data": "All Good",
+		})
+	})
 	r.POST("/register", register)
-	r.POST("/login",login)
-	r.GET("/validate",authentication_mw, validate)
+	r.POST("/login", login)
+	r.GET("/validate", authentication_mw, validate)
 	r.POST("/post", func(c *gin.Context) {
 		file, _ := c.FormFile("file")
 		log.Println(file.Filename)
-		c.SaveUploadedFile(file, dst)
+		c.SaveUploadedFile(file, "assests/upload"+file.Filename)
 		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
-		post(file.Filename)
+		var body struct {
+			ID       string
+			Username string
+			Password string
+		}
+		if c.Bind(&body) != nil {
+			fmt.Println("Cannot bind the data")
+			return
+		}
+		fmt.Println("Inside post new post")
+		url := uuid.New().String()
+		newpost := Post{url: url, UserID: main_user_id}
+		result := DB.Create(&newpost)
+
+		if result.Error != nil {
+			fmt.Println("Cannot insert the post")
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{})
+	})
 	r.Run()
 }
 
-//This is set to userID when login or register.
-//used for reference for other functions
-var main_user_id;
+func validate(c *gin.Context) {
+	user, _ := c.Get("user")
+	c.JSON(http.StatusOK, gin.H{
+		"data": user,
+	})
+}
 
-//login the user
-func login(c *gin.Context){
+// This is set to userID when login or register.
+// used for reference for other functions
+var main_user_id string
+
+// login the user
+func login(c *gin.Context) {
 	var body struct {
-		ID string
+		ID       string
 		Username string
 		Password string
 	}
-	if c.Bind(&body) != nil{
-		fmt.Println("Cannot bind the data");
+	if c.Bind(&body) != nil {
+		fmt.Println("Cannot bind the data")
 		return
 	}
-	
+
 	var user User
 	DB.First(&user, "Username = ?", body.Username)
-	if user.ID == ""{
-		fmt.Println("Username or password is incorrect");
-		return;
+	if user.ID == "" {
+		fmt.Println("Username or password is incorrect")
+		return
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password),[]byte(body.Password))
-	if err!=nil{
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+	if err != nil {
 		fmt.Println("Error in Encryption")
-		return;
+		return
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
-	
+
 	tokenString, err := token.SignedString([]byte(os.Getenv("hashcode")))
-	if err!=nil{
+	if err != nil {
 		fmt.Println("Token creation failed")
-		return;
+		return
 	}
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("authorization",tokenString,3600*24*30,"","",false,true);
-	main_user_id = userId
-	c.JSON(http.StatusOK,gin.H{
-		"data":userId,
+	c.SetCookie("authorization", tokenString, 3600*24*30, "", "", false, true)
+	main_user_id = user.ID
+	c.JSON(http.StatusOK, gin.H{
+		"data": user.ID,
 	})
 }
 
-//register new user
-func register(c *gin.Context){
+// register new user
+func register(c *gin.Context) {
 	var body struct {
-		ID string
+		ID       string
 		Username string
 		Password string
 	}
-	if c.Bind(&body) != nil{
-		fmt.Println("Cannot bind the data");
+	if c.Bind(&body) != nil {
+		fmt.Println("Cannot bind the data")
 		return
 	}
 
-	hash , error := bcrypt.GenerateFromPassword([]byte(body.Password),10)
-	if error != nil{
-		fmt.Println("Cannot generate Hash Value");
+	hash, error := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+	if error != nil {
+		fmt.Println("Cannot generate Hash Value")
 		return
 	}
 	userId := uuid.New().String()
-	user := User{ID:userId,Username:body.Username,Password:string(hash)}
+	user := User{ID: userId, Username: body.Username, Password: string(hash)}
 	result := DB.Create(&user)
 
-	if result.Error != nil{
-		fmt.Println("Cannot store in the database");
+	if result.Error != nil {
+		fmt.Println("Cannot store in the database")
 		return
 	}
 	fmt.Println("Succesfully Inserted")
@@ -144,78 +177,55 @@ func register(c *gin.Context){
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-//get the posts for his id
-//posts done by him - profile page
-func fetch_profile_data( c *gin.Context, db *gorm.DB){
+// get the posts for his id
+// posts done by him - profile page
+func fetch_profile_data(c *gin.Context, db *gorm.DB) {
 	var body struct {
-		ID string
+		ID       string
 		Username string
 		Password string
 	}
-	if c.Bind(&body) != nil{
-		fmt.Println("Cannot bind the data");
+	if c.Bind(&body) != nil {
+		fmt.Println("Cannot bind the data")
 		return
 	}
 	var user User
-	result := db.First(&user,main_user_id)
-	if result.Error != nil{
+	result := db.First(&user, main_user_id)
+	if result.Error != nil {
 		fmt.Println("Cannot fetch from the database")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"data":result
+		"data": result,
 	})
 }
 
-//retrieve all posts to show in homepage
-func fetch_all_post(c *gin.Context){
+// retrieve all posts to show in homepage
+func fetch_all_post(c *gin.Context) {
 	var body struct {
-		ID string
+		ID       string
 		Username string
 		Password string
 	}
-	if c.Bind(&body) != nil{
-		fmt.Println("Cannot bind the data");
+	if c.Bind(&body) != nil {
+		fmt.Println("Cannot bind the data")
 		return
 	}
 	var user User
 	result := DB.First(&user)
-	if result.Error != nil{
+	if result.Error != nil {
 		fmt.Println("No posts found to send")
 		c.AbortWithStatus(400)
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"data":result,
+		"data": result,
 	})
 }
 
-//function to post images
-func post(c *gin.Context){
-	var body struct {
-		ID string
-		Username string
-		Password string
-	}
-	if c.Bind(&body) != nil{
-		fmt.Println("Cannot bind the data");
-		return
-	}
-	fmt.Println("Inside post new post"
-	url := uuid.New().String()
-	newpost = Post{url:url,userId:main_user_id}
-	result := DB.Create(&newpost)
-
-	if result.Error != nil{
-		fmt.Println("Cannot insert the post")
-		return
-	}
-	c.JSON(http.StatusOK,gin.H{})
-}
-
-//middleware used for authentication
-func authentication_mw(c *gin.Context){
-	tokenString,err := c.Cookie("authorization")
-	if err!=nil{
+// middleware used for authentication
+func authentication_mw(c *gin.Context) {
+	tokenString, err := c.Cookie("authorization")
+	if err != nil {
 		fmt.Println("It is not good outside")
 		return
 	}
@@ -224,27 +234,27 @@ func authentication_mw(c *gin.Context){
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-	
+
 		return os.Getenv("hashcode"), nil
 	})
 	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		if float64(time.Now().Unix()) > claims["exp"].(float64){
+		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			c.AbortWithStatus(http.StatusUnauthorized)
 		}
 		var user User
 		DB.First(&user, claims["sub"])
 
-		if user.ID==""{
-			fmt.Println("User does not exists. Try creating new account");
+		if user.ID == "" {
+			fmt.Println("User does not exists. Try creating new account")
 			return
 		}
 		fmt.Println(claims["sub"], claims["Sub"])
 
-		c.Set("user",user)
+		c.Set("user", user)
 	} else {
 		fmt.Println(err)
 	}
