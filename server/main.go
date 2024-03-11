@@ -53,12 +53,10 @@ func init() {
 func main() {
 	r := gin.Default()
 	r.Use(cors.Default())
-	r.Run()
 	r.Static("/assets", "./assets")
-	r.GET("/", func(c *gin.Context) {
-		fmt.Println("Hello World")
-		c.JSON(http.StatusOK, gin.H{
-			"data": "All Good",
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
 		})
 	})
 	r.POST("/register", register)
@@ -169,12 +167,14 @@ func register(c *gin.Context) {
 	result := DB.Create(&user)
 
 	if result.Error != nil {
-		fmt.Println("Cannot store in the database")
+		fmt.Println(result.Error)
 		return
 	}
 	fmt.Println("Succesfully Inserted")
 	main_user_id = userId
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+	})
 }
 
 // get the posts for his id
