@@ -19,11 +19,10 @@ import (
 
 type User struct {
 	gorm.Model
-	ID       string `gorm:"autoIncrement"`
-	userID   string
-	Username string `gorm:"unique"`
-	Password string
-	Posts    []Post `gorm:"many2many:user_languages;"`
+	userstring string
+	Username   string `gorm:"unique"`
+	Password   string
+	Posts      []Post `gorm:"many2many:user_languages;"`
 }
 
 type Post struct {
@@ -83,6 +82,9 @@ func main() {
 		}
 		c.JSON(http.StatusOK, gin.H{})
 	})
+	r.DELETE("/delete", func(ctx *gin.Context) {
+		DB.Delete(&User{}, "1=1")
+	})
 	r.GET("/profile", fetch_profile_data)
 	r.Run()
 }
@@ -111,7 +113,7 @@ func login(c *gin.Context) {
 
 	var user User
 	DB.First(&user, "Username = ?", body.Username)
-	if user.ID == "" {
+	if user.ID <= 0 {
 		fmt.Println("Username Not found")
 		return
 	}
@@ -123,7 +125,7 @@ func login(c *gin.Context) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.userID,
+		"sub": user.userstring,
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 
@@ -135,9 +137,11 @@ func login(c *gin.Context) {
 
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("authorization", tokenString, 3600*24*30, "", "", false, true)
-	main_user_id = user.ID
+	main_user_id = user.userstring
+	fmt.Printf("type is %+v", user)
+	fmt.Println(user)
 	c.JSON(http.StatusOK, gin.H{
-		"data": user.userID,
+		"data": user.userstring,
 	})
 }
 
@@ -158,17 +162,16 @@ func register(c *gin.Context) {
 		fmt.Println("Cannot generate Hash Value")
 		return
 	}
-
-	userId := uuid.New().String()
-	user := User{userID: userId, Username: body.Username, Password: string(hash)}
+	userstring := uuid.New().String()
+	user := User{userstring: userstring, Username: body.Username, Password: string(hash)}
 	result := DB.Create(&user)
-
 	if result.Error != nil {
 		fmt.Println(result.Error)
 		return
 	}
+	fmt.Println(result)
 	fmt.Println("Succesfully Inserted")
-	main_user_id = userId
+	main_user_id = user.userstring
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
 	})
@@ -245,7 +248,7 @@ func authentication_mw(c *gin.Context) {
 		var user User
 		DB.First(&user, claims["sub"])
 
-		if user.ID == "" {
+		if user.ID <= 0 {
 			fmt.Println("User does not exists. Try creating new account")
 			return
 		}
