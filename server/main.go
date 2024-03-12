@@ -19,7 +19,7 @@ import (
 
 type User struct {
 	gorm.Model
-	ID       string `gorm:"unique"`
+	ID       string `gorm:"primaryKey"`
 	Username string `gorm:"unique"`
 	Password string
 	Posts    []Post `gorm:"many2many:user_languages;"`
