@@ -19,7 +19,8 @@ import (
 
 type User struct {
 	gorm.Model
-	ID       string `gorm:"primaryKey"`
+	ID       string `gorm:"autoIncrement"`
+	userID   string
 	Username string `gorm:"unique"`
 	Password string
 	Posts    []Post `gorm:"many2many:user_languages;"`
@@ -54,14 +55,9 @@ func main() {
 	r := gin.Default()
 	r.Use(cors.Default())
 	r.Static("/assets", "./assets")
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-	r.POST("/register", register)
-	r.POST("/login", login)
-	r.GET("/validate", authentication_mw, validate)
+	r.POST("/register", register)                   //complete
+	r.POST("/login", login)                         //complete
+	r.GET("/validate", authentication_mw, validate) //complete
 	r.POST("/post", func(c *gin.Context) {
 		file, _ := c.FormFile("file")
 		log.Println(file.Filename)
@@ -87,6 +83,7 @@ func main() {
 		}
 		c.JSON(http.StatusOK, gin.H{})
 	})
+	r.GET("/profile", fetch_profile_data)
 	r.Run()
 }
 
@@ -101,10 +98,9 @@ func validate(c *gin.Context) {
 // used for reference for other functions
 var main_user_id string
 
-// login the user
+// login the user -- completed
 func login(c *gin.Context) {
 	var body struct {
-		ID       string
 		Username string
 		Password string
 	}
@@ -116,18 +112,18 @@ func login(c *gin.Context) {
 	var user User
 	DB.First(&user, "Username = ?", body.Username)
 	if user.ID == "" {
-		fmt.Println("Username or password is incorrect")
+		fmt.Println("Username Not found")
 		return
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 	if err != nil {
-		fmt.Println("Error in Encryption")
+		fmt.Println("Wrong Password")
 		return
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
+		"sub": user.userID,
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 
@@ -141,11 +137,11 @@ func login(c *gin.Context) {
 	c.SetCookie("authorization", tokenString, 3600*24*30, "", "", false, true)
 	main_user_id = user.ID
 	c.JSON(http.StatusOK, gin.H{
-		"data": user.ID,
+		"data": user.userID,
 	})
 }
 
-// register new user
+// register new user -- completed
 func register(c *gin.Context) {
 	var body struct {
 		ID       string
@@ -162,8 +158,9 @@ func register(c *gin.Context) {
 		fmt.Println("Cannot generate Hash Value")
 		return
 	}
+
 	userId := uuid.New().String()
-	user := User{ID: userId, Username: body.Username, Password: string(hash)}
+	user := User{userID: userId, Username: body.Username, Password: string(hash)}
 	result := DB.Create(&user)
 
 	if result.Error != nil {
@@ -179,7 +176,7 @@ func register(c *gin.Context) {
 
 // get the posts for his id
 // posts done by him - profile page
-func fetch_profile_data(c *gin.Context, db *gorm.DB) {
+func fetch_profile_data(c *gin.Context) {
 	var body struct {
 		ID       string
 		Username string
@@ -190,7 +187,7 @@ func fetch_profile_data(c *gin.Context, db *gorm.DB) {
 		return
 	}
 	var user User
-	result := db.First(&user, main_user_id)
+	result := DB.First(&user, "userID = ?", main_user_id)
 	if result.Error != nil {
 		fmt.Println("Cannot fetch from the database")
 		return
