@@ -53,7 +53,7 @@ const Sign_In = () => {
                 className="w-full bg-transparent border-b-2 text-white text-xl outline-none pb-2"
                 type="email"
                 onChange={handleChange}
-                name="email"
+                name="Username"
               />
             </div>
             <div>
@@ -62,7 +62,7 @@ const Sign_In = () => {
                 className="w-full bg-transparent border-b-2 text-white text-xl outline-none pb-2"
                 type="password"
                 onChange={handleChange}
-                name="password"
+                name="Password"
               />
             </div>
             <div className=" w-full flex justify-center pt-6">

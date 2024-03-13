@@ -148,7 +148,6 @@ func login(c *gin.Context) {
 // register new user -- completed
 func register(c *gin.Context) {
 	var body struct {
-		ID       string
 		Username string
 		Password string
 	}
@@ -162,13 +161,15 @@ func register(c *gin.Context) {
 		fmt.Println("Cannot generate Hash Value")
 		return
 	}
-	userstring := uuid.New().String()
-	user := User{userstring: userstring, Username: body.Username, Password: string(hash)}
+	user_uuid := uuid.New().String()
+	fmt.Println(user_uuid)
+	user := User{userstring: user_uuid, Username: body.Username, Password: string(hash)}
 	result := DB.Create(&user)
 	if result.Error != nil {
 		fmt.Println(result.Error)
 		return
 	}
+	fmt.Println(user.user_uuid)
 	fmt.Println(result)
 	fmt.Println("Succesfully Inserted")
 	main_user_id = user.userstring
@@ -201,22 +202,12 @@ func fetch_profile_data(c *gin.Context) {
 }
 
 // retrieve all posts to show in homepage
-func fetch_all_post(c *gin.Context) {
-	var body struct {
-		ID       string
-		Username string
-		Password string
-	}
-	if c.Bind(&body) != nil {
-		fmt.Println("Cannot bind the data")
+func fetch_for_page(c *gin.Context) {
+	resut := DB.Limit(10).Offset(5).Find(&post)
+	if result.Error(
+		fmt.Println(result.Error)
 		return
-	}
-	var user User
-	result := DB.First(&user)
-	if result.Error != nil {
-		fmt.Println("No posts found to send")
-		c.AbortWithStatus(400)
-	}
+	)
 	c.JSON(http.StatusOK, gin.H{
 		"data": result,
 	})
