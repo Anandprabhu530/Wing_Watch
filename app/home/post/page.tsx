@@ -26,7 +26,7 @@ const Post = () => {
   const handleSubmit = async (event:React.FormEvent) => {
     event.preventDefault();
     Validatedata(data)
-    const res = await fetch("http://localhost:8080/postImages",{
+    const res = await fetch("http://localhost:8080/post",{
       method: "POST",
       headers: {
         "Content-Type": "application/json",

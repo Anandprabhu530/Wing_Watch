@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -17,18 +16,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct {
+type Template struct {
 	gorm.Model
-	userstring string
-	Username   string `gorm:"unique"`
-	Password   string
-	Posts      []Post `gorm:"many2many:user_languages;"`
+	Username string `gorm:"unique"`
+	Password string
+	Posts    []Post `gorm:"foreignKey:User"`
 }
 
 type Post struct {
 	gorm.Model
-	url    string
-	UserID string `gorm:"ID"`
+	Url  string `gorm:"unique"`
+	User uint
 }
 
 var DB *gorm.DB
@@ -47,7 +45,7 @@ func init() {
 		fmt.Println(dberr)
 	}
 
-	DB.AutoMigrate(&User{})
+	DB.AutoMigrate(&Template{}, &Post{})
 }
 
 func main() {
@@ -58,10 +56,10 @@ func main() {
 	r.POST("/login", login)                         //complete
 	r.GET("/validate", authentication_mw, validate) //complete
 	r.POST("/post", func(c *gin.Context) {
-		file, _ := c.FormFile("file")
-		log.Println(file.Filename)
-		c.SaveUploadedFile(file, "assests/upload"+file.Filename)
-		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+		// file, _ := c.FormFile("file")
+		// log.Println(file.Filename)
+		// c.SaveUploadedFile(file, "assests/upload"+file.Filename)
+		// c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 		var body struct {
 			ID       string
 			Username string
@@ -71,21 +69,31 @@ func main() {
 			fmt.Println("Cannot bind the data")
 			return
 		}
-		fmt.Println("Inside post new post")
-		url := uuid.New().String()
-		newpost := Post{url: url, UserID: main_user_id}
-		result := DB.Create(&newpost)
-
-		if result.Error != nil {
-			fmt.Println("Cannot insert the post")
+		var user Template
+		if err := DB.Where("username = ?", body.Username).First(&user).Error; err != nil {
+			fmt.Println("Error finding user:", err)
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
+		imageURL := uuid.New().String()
+		newPost := Post{
+			Url:  imageURL,
+			User: user.ID,
+		}
+
+		result := DB.Create(&newPost)
+		if result.Error != nil {
+			fmt.Println("Error creating post:", result.Error)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
+			return
+		}
+		fmt.Println(result)
 		c.JSON(http.StatusOK, gin.H{})
 	})
 	r.DELETE("/delete", func(ctx *gin.Context) {
-		DB.Delete(&User{}, "1=1")
+		DB.Delete(&Template{}, "1=1")
 	})
-	r.GET("/profile", fetch_profile_data)
+	r.POST("/profile", fetch_profile_data)
 	r.Run()
 }
 
@@ -96,9 +104,9 @@ func validate(c *gin.Context) {
 	})
 }
 
-// This is set to userID when login or register.
+// This is set to User when login or register.
 // used for reference for other functions
-var main_user_id string
+var Main_user_id string
 
 // login the user -- completed
 func login(c *gin.Context) {
@@ -111,11 +119,11 @@ func login(c *gin.Context) {
 		return
 	}
 
-	var user User
-	DB.Where("name = ?", body.Username).Find(&user)
+	var user Template
+	DB.Where("Username = ?", body.Username).Find(&user)
 	fmt.Println(user)
-	if user.userstring == "" {
-		fmt.Println("UserId e Not found")
+	if user.ID <= 0 {
+		fmt.Println("User e Not found")
 		return
 	}
 
@@ -126,7 +134,7 @@ func login(c *gin.Context) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.userstring,
+		"sub": user.Username,
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 
@@ -138,11 +146,12 @@ func login(c *gin.Context) {
 
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("authorization", tokenString, 3600*24*30, "", "", false, true)
-	main_user_id = user.userstring
+	Main_user_id = user.Username
 	fmt.Printf("type is %+v", user)
+	fmt.Println()
 	fmt.Println(user)
 	c.JSON(http.StatusOK, gin.H{
-		"data": user.userstring,
+		"data": user.Username,
 	})
 }
 
@@ -163,18 +172,18 @@ func register(c *gin.Context) {
 		return
 	}
 	user_uuid := uuid.New().String()
-	fmt.Println(user_uuid)
-	user := User{userstring: user_uuid, Username: body.Username, Password: string(hash)}
-	result := DB.Select("userstring","Username","Password").Create(&user)
-	// result := DB.Create(&user)
+	user := Template{Username: body.Username, Password: string(hash)}
+	// result := DB.Select("userstring", "Username", "Password").Create(&user)
+	result := DB.Create(&user)
 	if result.Error != nil {
 		fmt.Println(result.Error)
 		return
 	}
-	fmt.Println(user.user_uuid, user.ID)
+	fmt.Printf("user_uuid : %v ,user: %v ", user_uuid, user)
+	fmt.Println()
 	fmt.Println(result.RowsAffected)
 	fmt.Println("Succesfully Inserted")
-	main_user_id = user.userstring
+	Main_user_id = user.Username
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
 	})
@@ -192,28 +201,36 @@ func fetch_profile_data(c *gin.Context) {
 		fmt.Println("Cannot bind the data")
 		return
 	}
-	var user User
-	result := DB.First(&user, "userID = ?", main_user_id)
-	if result.Error != nil {
-		fmt.Println("Cannot fetch from the database")
+	var user Template
+	if err := DB.Where("username = ?", body.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
+
+	var posts []Post
+	if err := DB.Model(&user).Association("Posts").Find(&posts); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve posts"})
+		return
+	}
+	fmt.Println(posts)
 	c.JSON(http.StatusOK, gin.H{
-		"data": result,
+		"data": "result",
 	})
 }
 
 // retrieve all posts to show in homepage
-func fetch_for_page(c *gin.Context) {
-	resut := DB.Order("CreatedAt desc").Limit(10).Offset(5).Find(&post)
-	if result.Error(
-		fmt.Println(result.Error)
-		return
-	)
-	c.JSON(http.StatusOK, gin.H{
-		"data": result,
-	})
-}
+// func fetch_for_page(c *gin.Context) {
+
+// 	result := DB.Order("CreatedAt desc").Limit(10).Offset(5).Find(&post)
+
+// 	if result.Error != nil {
+// 		fmt.Println(result.Error)
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, gin.H{
+// 		"data": result,
+// 	})
+// }
 
 // middleware used for authentication
 func authentication_mw(c *gin.Context) {
@@ -238,7 +255,7 @@ func authentication_mw(c *gin.Context) {
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			c.AbortWithStatus(http.StatusUnauthorized)
 		}
-		var user User
+		var user Template
 		DB.First(&user, claims["sub"])
 
 		if user.ID <= 0 {
