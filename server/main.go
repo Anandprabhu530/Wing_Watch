@@ -112,8 +112,8 @@ func login(c *gin.Context) {
 	}
 
 	var user User
-	DB.First(&user, "Username = ?", body.Username)
-	if user.ID <= 0 {
+	DB.Where("name = ?", body.Username).Find(&user)
+	if user.ID < 0 {
 		fmt.Println("Username Not found")
 		return
 	}
@@ -164,13 +164,14 @@ func register(c *gin.Context) {
 	user_uuid := uuid.New().String()
 	fmt.Println(user_uuid)
 	user := User{userstring: user_uuid, Username: body.Username, Password: string(hash)}
-	result := DB.Create(&user)
+	result := DB.Select("userstring","Username","Password").Create(&user)
+	// result := DB.Create(&user)
 	if result.Error != nil {
 		fmt.Println(result.Error)
 		return
 	}
-	fmt.Println(user.user_uuid)
-	fmt.Println(result)
+	fmt.Println(user.user_uuid, user.ID)
+	fmt.Println(result.RowsAffected)
 	fmt.Println("Succesfully Inserted")
 	main_user_id = user.userstring
 	c.JSON(http.StatusOK, gin.H{
@@ -203,7 +204,7 @@ func fetch_profile_data(c *gin.Context) {
 
 // retrieve all posts to show in homepage
 func fetch_for_page(c *gin.Context) {
-	resut := DB.Limit(10).Offset(5).Find(&post)
+	resut := DB.Order("CreatedAt desc").Limit(10).Offset(5).Find(&post)
 	if result.Error(
 		fmt.Println(result.Error)
 		return
