@@ -113,8 +113,9 @@ func login(c *gin.Context) {
 
 	var user User
 	DB.Where("name = ?", body.Username).Find(&user)
-	if user.ID < 0 {
-		fmt.Println("Username Not found")
+	fmt.Println(user)
+	if user.userstring == "" {
+		fmt.Println("UserId e Not found")
 		return
 	}
 
