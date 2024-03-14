@@ -56,10 +56,10 @@ func main() {
 	r.POST("/login", login)                         //complete
 	r.GET("/validate", authentication_mw, validate) //complete
 	r.POST("/post", func(c *gin.Context) {
-		// file, _ := c.FormFile("file")
-		// log.Println(file.Filename)
-		// c.SaveUploadedFile(file, "assests/upload"+file.Filename)
-		// c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+		file, _ := c.FormFile("file")
+		fmt.Println(file.Filename)
+		c.SaveUploadedFile(file, "assests/upload/"+file.Filename)
+		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 		var body struct {
 			ID       string
 			Username string
@@ -75,7 +75,7 @@ func main() {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
-		imageURL := uuid.New().String()
+		imageURL := "assests/upload/" + file.Filename + " " + uuid.New().String()[:5]
 		newPost := Post{
 			Url:  imageURL,
 			User: user.ID,
@@ -88,6 +88,7 @@ func main() {
 			return
 		}
 		fmt.Println(result)
+		fmt.Println("Success")
 		c.JSON(http.StatusOK, gin.H{})
 	})
 	r.DELETE("/delete", func(ctx *gin.Context) {
