@@ -71,10 +71,10 @@ func main() {
 		}
 		var user Template
 		if err := DB.Where("username = ?", body.Username).First(&user).Error; err != nil {
-			fmt.Println("Error finding user:", err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
+
 		imageURL := "assests/upload/" + file.Filename + " " + uuid.New().String()[:5]
 		newPost := Post{
 			Url:  imageURL,
