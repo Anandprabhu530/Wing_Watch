@@ -25,8 +25,12 @@ type Template struct {
 
 type Post struct {
 	gorm.Model
-	Url  string `gorm:"unique"`
-	User uint
+	Url         string `gorm:"unique"`
+	User        uint
+	Wings       uint
+	BirdName    string
+	Location    string
+	Description string
 }
 
 var DB *gorm.DB
@@ -60,8 +64,14 @@ func main() {
 		fmt.Println(file.Filename)
 		c.SaveUploadedFile(file, "assests/upload/"+file.Filename)
 		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+		Location := c.PostForm("location")
+		Description := c.PostForm("description")
+		BirdName := c.PostForm("name")
+		Username := c.PostForm("Username")
+
+		fmt.Println(Location)
 		var user Template
-		if err := DB.Where("username = ?", Main_user_id).First(&user).Error; err != nil {
+		if err := DB.Where("username = ?", Username).First(&user).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
