@@ -26,7 +26,7 @@ type Template struct {
 type Post struct {
 	gorm.Model
 	Url         string `gorm:"unique"`
-	User        uint
+	User        string
 	Wings       uint
 	BirdName    string
 	Location    string
@@ -78,8 +78,12 @@ func main() {
 
 		imageURL := "assests/upload/" + file.Filename + " " + uuid.New().String()[:5]
 		newPost := Post{
-			Url:  imageURL,
-			User: user.ID,
+			Url:         imageURL,
+			User:        Username,
+			Wings:       0,
+			BirdName:    BirdName,
+			Location:    Location,
+			Description: Description,
 		}
 
 		result := DB.Create(&newPost)
