@@ -60,17 +60,8 @@ func main() {
 		fmt.Println(file.Filename)
 		c.SaveUploadedFile(file, "assests/upload/"+file.Filename)
 		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
-		var body struct {
-			ID       string
-			Username string
-			Password string
-		}
-		if c.Bind(&body) != nil {
-			fmt.Println("Cannot bind the data")
-			return
-		}
 		var user Template
-		if err := DB.Where("username = ?", body.Username).First(&user).Error; err != nil {
+		if err := DB.Where("username = ?", Main_user_id).First(&user).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
@@ -119,10 +110,10 @@ func login(c *gin.Context) {
 		fmt.Println("Cannot bind the data")
 		return
 	}
-
+	fmt.Println("body : ", body)
 	var user Template
 	DB.Where("Username = ?", body.Username).Find(&user)
-	fmt.Println(user)
+	fmt.Println("user: ", user)
 	if user.ID <= 0 {
 		fmt.Println("User e Not found")
 		return
@@ -182,7 +173,6 @@ func register(c *gin.Context) {
 	}
 	fmt.Printf("user_uuid : %v ,user: %v ", user_uuid, user)
 	fmt.Println()
-	fmt.Println(result.RowsAffected)
 	fmt.Println("Succesfully Inserted")
 	Main_user_id = user.Username
 	c.JSON(http.StatusOK, gin.H{

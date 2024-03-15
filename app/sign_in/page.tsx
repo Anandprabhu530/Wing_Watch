@@ -4,20 +4,23 @@ import Image from "next/image";
 import sign_in_backgroud from "../../sign_in_backgroud.jpg";
 import Link from "next/link";
 import { useState } from "react";
-import { redirect } from 'next/navigation'
+import axios from "axios";
+import {useRouter} from "next/navigation";
+
 const Sign_In = () => {
   const [formData, setFormData] = useState({})
-  
-  const handlesubmit = async(event) =>{
-    event.preventDefault()
-    const res = await fetch("https://localhost:8080/login",{
-      method: "POST",
-      body: JSON.stringify({ data: formData })
+  const router = useRouter()
+  const handlesubmit = async() =>{
+    // event.preventDefault()
+    const {Username,Password} = formData
+    const res = await axios.post("http://localhost:8080/login",{
+      Username,
+      Password
     })
-
-    if(res.ok){
-      redirect('/home')
-    }
+    localStorage.setItem('username', Username);
+      if(res.statusText === "OK"){
+        router.push('/home')
+      }
   }
 
   const handleChange = (event) =>{

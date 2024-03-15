@@ -90,7 +90,7 @@ const Post = () => {
     
     const formData = new FormData();
     formData.append('file', file);
-
+    const Username = localStorage.getItem('username');
     try {
       const response = await axios.post('http://localhost:8080/post', formData, {
         headers: {
@@ -104,9 +104,10 @@ const Post = () => {
   }
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <input onChange={handlechange}/>
+    <div className='pt-10 pl-10'>
+      <form className='flex flex-col gap-10'>
+        <input type="file" onChange={handlechange}/>
+        <button className="border-2 border-white p-2 " onClick={handleSubmit}>Submit</button>
       </form>
     </div>
   )

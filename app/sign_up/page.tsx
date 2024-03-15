@@ -5,19 +5,17 @@ import sign_in_backgroud from "../../sign_in_backgroud.jpg";
 import Link from "next/link";
 import { useState } from "react";
 import { redirect } from 'next/navigation'
+import axios from "axios";
 const Sign_up = () => {
   const [formData, setFormData] = useState({})
 
-  const handlesubmit = async(event) =>{
-    event.preventDefault()
-    const res = await fetch("https://localhost:8080/register",{
-      method: "POST",
-      body: JSON.stringify({ data: formData })
-    })
-
-    if(res.ok){
-      redirect('/login')
-    }
+  const handlesubmit = async() =>{
+    const {Username, Password} = formData
+    const res = await axios.post("http://localhost:8080/register",{
+      Username,
+      Password
+    })  
+    console.log(res)
   }
 
   const handleChange = (event) =>{
