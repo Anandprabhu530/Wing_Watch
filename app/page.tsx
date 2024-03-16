@@ -1,5 +1,5 @@
 import Image from "next/image";
-import bird from "../bird.jpg";
+import bird from "../app/bird.jpg";
 import Link from "next/link";
 
 export default function Home() {

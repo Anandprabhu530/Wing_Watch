@@ -10,8 +10,8 @@ import {useRouter} from "next/navigation";
 const Sign_In = () => {
   const [formData, setFormData] = useState({})
   const router = useRouter()
-  const handlesubmit = async() =>{
-    // event.preventDefault()
+  const handlesubmit = async(event) =>{
+    event.preventDefault()
     const {Username,Password} = formData
     const res = await axios.post("http://localhost:8080/login",{
       Username,

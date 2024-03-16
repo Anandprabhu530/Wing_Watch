@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
@@ -26,8 +26,8 @@ type Template struct {
 
 type Post struct {
 	gorm.Model
-	Url         string `gorm:"unique"`
-	User        uint
+	Url         string
+	User        uint `gorm:"foreignKey:User"`
 	Username    string
 	Wings       uint
 	BirdName    string
@@ -61,47 +61,9 @@ func main() {
 	r.POST("/register", register)                   //complete
 	r.POST("/login", login)                         //complete
 	r.GET("/validate", authentication_mw, validate) //complete
-	r.POST("/post", func(c *gin.Context) {
-		file, _ := c.FormFile("file")
-		fmt.Println(file.Filename)
-		c.SaveUploadedFile(file, "assests/upload/"+file.Filename)
-		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
-
-		Location := c.PostForm("location")
-		Description := c.PostForm("description")
-		BirdName := c.PostForm("name")
-		Username := c.PostForm("Username")
-		i := strings.Index(Username, "@")
-		User_name := Username[:i]
-
-		var user Template
-		if err := DB.Where("username = ?", User_name).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-			return
-		}
-
-		imageURL := "assests/upload/" + file.Filename + " " + uuid.New().String()[:5]
-		newPost := Post{
-			Url:         imageURL,
-			User:        user.ID,
-			Wings:       0,
-			Username:    User_name,
-			BirdName:    BirdName,
-			Location:    Location,
-			Description: Description,
-		}
-
-		result := DB.Create(&newPost)
-		if result.Error != nil {
-			fmt.Println("Error creating post:", result.Error)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
-			return
-		}
-		fmt.Println(result)
-		fmt.Println("Success")
-		c.JSON(http.StatusOK, gin.H{})
-	})
 	r.POST("/profile", fetch_profile_data)
+	r.POST("/homepage", fetch_for_page)
+	r.POST("/post", posts)
 	r.Run()
 }
 
@@ -192,7 +154,7 @@ func register(c *gin.Context) {
 }
 
 // get the posts for his id
-// posts done by him - profile page
+// posts done by him - profile page --
 func fetch_profile_data(c *gin.Context) {
 	var body struct {
 		Username string
@@ -221,18 +183,60 @@ func fetch_profile_data(c *gin.Context) {
 }
 
 // retrieve all posts to show in homepage
-// func fetch_for_page(c *gin.Context) {
+func fetch_for_page(c *gin.Context) {
+	var posts []Post
+	result := DB.First(&posts)
+	if result.Error != nil {
+		fmt.Println(result.Error)
+	}
+	data, err := json.Marshal(posts)
+	if err != nil {
+		fmt.Println("Error marshalling data:", err)
+		return
+	}
+	fmt.Println(string(data))
 
-// 	result := DB.Order("CreatedAt desc").Limit(10).Offset(5).Find(&post)
+	c.JSON(http.StatusOK, gin.H{
+		"data": result,
+	})
+}
 
-// 	if result.Error != nil {
-// 		fmt.Println(result.Error)
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, gin.H{
-// 		"data": result,
-// 	})
-// }
+// create new post
+func posts(c *gin.Context) {
+	Url := c.PostForm("url")
+	Location := c.PostForm("location")
+	Description := c.PostForm("description")
+	BirdName := c.PostForm("name")
+	Username := c.PostForm("Username")
+	i := strings.Index(Username, "@")
+	User_name := Username[:i]
+
+	var user Template
+	if err := DB.Where("username = ?", User_name).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	newPost := Post{
+		Url:         Url,
+		User:        user.ID,
+		Wings:       0,
+		Username:    User_name,
+		BirdName:    BirdName,
+		Location:    Location,
+		Description: Description,
+	}
+
+	result := DB.Create(&newPost)
+	if result.Error != nil {
+		fmt.Println("Error creating post:", result.Error)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
+		return
+	}
+	fmt.Println(result)
+	fmt.Println("Success")
+	c.JSON(http.StatusOK, gin.H{})
+}
 
 // middleware used for authentication
 func authentication_mw(c *gin.Context) {

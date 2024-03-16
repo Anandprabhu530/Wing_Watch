@@ -5,22 +5,19 @@ import React, { useState } from 'react';
 
 const Post = () => {
   const [data,setData] = useState({})
-  const [file,setfile] = useState(null)
-  
-  const handlefilechange = (event) =>{
-    setfile(event?.target.files[0])
-  }
     
   const handleSubmit = async (event) => {
     event.preventDefault()
     const formData = new FormData();
-    formData.append('file', file);
-    const {BirdName,Description,Location} = data
+    const {BirdName,Description,Location,img} = data
+    console.log(img)
     formData.append('name', BirdName)
     formData.append('description',Description)
     formData.append('location',Location)
+    formData.append('url',img)
     const username = localStorage.getItem('username')
     formData.append('Username', username);
+    console.log(formData)
     const response = await axios.post('http://localhost:8080/post', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
@@ -52,12 +49,10 @@ const Post = () => {
           <div className="text-2xl pb-4 font-medium">Image:</div>
             <div className="w-full flex">
             <input
-              type="file" 
-              onChange={handlefilechange}
+            className="border border-white bg-transparent rounded-md w-full outline-none mb-6 text-xl p-2"
+              onChange={handleChange}
               id="img"
               name="img"
-              accept="image/*"
-              className='cursor-pointer'
             />
           </div>
         </div>
