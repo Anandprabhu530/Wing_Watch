@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -27,6 +28,7 @@ type Post struct {
 	gorm.Model
 	Url         string `gorm:"unique"`
 	User        uint
+	Username    string
 	Wings       uint
 	BirdName    string
 	Location    string
@@ -69,9 +71,11 @@ func main() {
 		Description := c.PostForm("description")
 		BirdName := c.PostForm("name")
 		Username := c.PostForm("Username")
+		i := strings.Index(Username, "@")
+		User_name := Username[:i]
 
 		var user Template
-		if err := DB.Where("username = ?", Username).First(&user).Error; err != nil {
+		if err := DB.Where("username = ?", User_name).First(&user).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
@@ -81,6 +85,7 @@ func main() {
 			Url:         imageURL,
 			User:        user.ID,
 			Wings:       0,
+			Username:    User_name,
 			BirdName:    BirdName,
 			Location:    Location,
 			Description: Description,
@@ -95,9 +100,6 @@ func main() {
 		fmt.Println(result)
 		fmt.Println("Success")
 		c.JSON(http.StatusOK, gin.H{})
-	})
-	r.DELETE("/delete", func(ctx *gin.Context) {
-		DB.Delete(&Template{}, "1=1")
 	})
 	r.POST("/profile", fetch_profile_data)
 	r.Run()
@@ -121,8 +123,10 @@ func login(c *gin.Context) {
 		return
 	}
 	fmt.Println("body : ", body)
+	i := strings.Index(body.Username, "@")
+	User_name := body.Username[:i]
 	var user Template
-	DB.Where("Username = ?", body.Username).Find(&user)
+	DB.Where("Username = ?", User_name).Find(&user)
 	fmt.Println("user: ", user)
 	if user.ID <= 0 {
 		fmt.Println("User e Not found")
@@ -172,14 +176,14 @@ func register(c *gin.Context) {
 		fmt.Println("Cannot generate Hash Value")
 		return
 	}
-	user_uuid := uuid.New().String()
-	user := Template{Username: body.Username, Password: string(hash)}
+	i := strings.Index(body.Username, "@")
+	User_name := body.Username[:i]
+	user := Template{Username: User_name, Password: string(hash)}
 	result := DB.Create(&user)
 	if result.Error != nil {
 		fmt.Println(result.Error)
 		return
 	}
-	fmt.Printf("user_uuid : %v ,user: %v ", user_uuid, user)
 	fmt.Println()
 	fmt.Println("Succesfully Inserted")
 	c.JSON(http.StatusOK, gin.H{
@@ -191,28 +195,28 @@ func register(c *gin.Context) {
 // posts done by him - profile page
 func fetch_profile_data(c *gin.Context) {
 	var body struct {
-		ID       string
 		Username string
-		Password string
 	}
 	if c.Bind(&body) != nil {
 		fmt.Println("Cannot bind the data")
 		return
 	}
+	i := strings.Index(body.Username, "@")
+	User_name := body.Username[:i]
 	var user Template
-	if err := DB.Where("username = ?", body.Username).First(&user).Error; err != nil {
+	if err := DB.Where("username = ?", User_name).First(&user).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-
 	var posts []Post
 	if err := DB.Model(&user).Association("Posts").Find(&posts); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve posts"})
 		return
 	}
-	fmt.Println(posts)
+	fmt.Println("Posts : ", posts)
+	fmt.Println("Your post retrival success")
 	c.JSON(http.StatusOK, gin.H{
-		"data": "result",
+		"data": posts,
 	})
 }
 
