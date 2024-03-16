@@ -34,7 +34,7 @@ const Post = () => {
   }
 
   return (
-    <div>
+    <div className='border-l-2 border-white'>
       <form className="flex flex-col p-8 w-full" onSubmit={handleSubmit}>
         <div>
           <div className="text-2xl pb-4 font-medium">Name of the Bird:</div>
@@ -50,14 +50,14 @@ const Post = () => {
         </div>
         <div>
           <div className="text-2xl pb-4 font-medium">Image:</div>
-            <div className="w-full h-full flex justify-center items-center border border-white cursor-pointer">
+            <div className="w-full flex">
             <input
               type="file" 
               onChange={handlefilechange}
               id="img"
               name="img"
               accept="image/*"
-              className="pl-32 h-full"
+              className='cursor-pointer'
             />
           </div>
         </div>

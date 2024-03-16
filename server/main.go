@@ -26,7 +26,7 @@ type Template struct {
 type Post struct {
 	gorm.Model
 	Url         string `gorm:"unique"`
-	User        string
+	User        uint
 	Wings       uint
 	BirdName    string
 	Location    string
@@ -64,12 +64,12 @@ func main() {
 		fmt.Println(file.Filename)
 		c.SaveUploadedFile(file, "assests/upload/"+file.Filename)
 		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+
 		Location := c.PostForm("location")
 		Description := c.PostForm("description")
 		BirdName := c.PostForm("name")
 		Username := c.PostForm("Username")
 
-		fmt.Println(Location)
 		var user Template
 		if err := DB.Where("username = ?", Username).First(&user).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
@@ -79,7 +79,7 @@ func main() {
 		imageURL := "assests/upload/" + file.Filename + " " + uuid.New().String()[:5]
 		newPost := Post{
 			Url:         imageURL,
-			User:        Username,
+			User:        user.ID,
 			Wings:       0,
 			BirdName:    BirdName,
 			Location:    Location,
@@ -109,10 +109,6 @@ func validate(c *gin.Context) {
 		"data": user,
 	})
 }
-
-// This is set to User when login or register.
-// used for reference for other functions
-var Main_user_id string
 
 // login the user -- completed
 func login(c *gin.Context) {
@@ -152,7 +148,6 @@ func login(c *gin.Context) {
 
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("authorization", tokenString, 3600*24*30, "", "", false, true)
-	Main_user_id = user.Username
 	fmt.Printf("type is %+v", user)
 	fmt.Println()
 	fmt.Println(user)
@@ -179,7 +174,6 @@ func register(c *gin.Context) {
 	}
 	user_uuid := uuid.New().String()
 	user := Template{Username: body.Username, Password: string(hash)}
-	// result := DB.Select("userstring", "Username", "Password").Create(&user)
 	result := DB.Create(&user)
 	if result.Error != nil {
 		fmt.Println(result.Error)
@@ -188,7 +182,6 @@ func register(c *gin.Context) {
 	fmt.Printf("user_uuid : %v ,user: %v ", user_uuid, user)
 	fmt.Println()
 	fmt.Println("Succesfully Inserted")
-	Main_user_id = user.Username
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
 	})
